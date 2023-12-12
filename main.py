@@ -1,36 +1,32 @@
-from datetime import date, datetime, timedelta
-from collections import defaultdict
+from datetime import date, datetime
 
 def get_birthdays_per_week(users):
+    result = dict()
     today = date.today()
-    congratulations = defaultdict(list)
+    year = 365
+    week = 7
     
-    if not users:
-        return {}
-    
-    days_in_week = [today + timedelta(i) for i in range(7)]   
-
-    dict_ = {(date1.month, date1.day): date1.strftime('%A') for date1 in days_in_week}
-
     for user in users:
-        user_birthday = user['birthday']
-        tuple_birthday = (user_birthday.month, user_birthday.day)
-        if tuple_birthday in dict_:
-            congratulations[dict_[tuple_birthday]].append(user['name']) 
+        user_birthday = user['birthday'].replace(year=today.year)
+        delta = (user_birthday - today).days
+        
+        if delta < 0:
+            delta += year
             
-    if 'Sunday' in congratulations or 'Saturday' in congratulations:
-        if today.weekday() != 0:
-            sunday_users = congratulations.get('Sunday', [])
-            saturday_users = congratulations.get('Saturday', [])
-            if sunday_users or saturday_users:
-                congratulations['Monday'] += sunday_users + saturday_users
-
-        if 'Saturday' in congratulations:
-            del congratulations['Saturday']
-        if 'Sunday' in congratulations:
-            del congratulations['Sunday']
-       
-    return dict(congratulations)    
+        if 0 <= delta < week:
+            day_week = user_birthday.strftime('%A')
+            
+            if day_week == 'Saturday' or day_week == 'Sunday':
+                if 'Monday' not in result:
+                    result['Monday'] = list()
+                result['Monday'].append(user['name'])
+                
+            else:
+                if day_week not in result:
+                    result[day_week] = list()
+                result[day_week].append(user['name'])
+    return result
+    
 
 if __name__ == "__main__":
     users = [
